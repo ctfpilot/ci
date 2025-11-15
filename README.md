@@ -121,7 +121,7 @@ jobs:
 
 This workflow contains the Docker build and push system used throughout CTF Pilot.
 
-The wofklow requires the `repository` input to be specified.
+The workflow requires the `repository` input to be specified.
 
 #### Inputs
 
