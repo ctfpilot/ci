@@ -1,13 +1,73 @@
-# CTF Pilot's Template Repository
+# CTF Pilot's CI
 
-## Template information
+> [!IMPORTANT]
+> This CI repository is meant for internal usage within the CTFPilot organization.
 
-This repository, is a template repository for open-source projects within CTF Pilot.
+This repository contains Continuous intergration automation, in the forms of Github Action workflows.  
 
-It provices a EUPL-1.2 License, release system and other standard files.
+## How to use
 
-Please remove this section, and replace with relevant information.  
-Replace `<repository-name>` with the repository name in `.github/workflows/cla-assistant.yml`and `.github/workflows/release.yml`.
+To use the reusable workflows, use the following template to use:
+
+```yml
+name: <name>
+
+on:
+  <triggers>
+
+jobs:
+  <job>:
+    permissions:
+      <permissions>
+    name: <name>
+    uses: ctfpilot/ci/.github/workflows/<workflow>@<version>
+    with:
+      <inputs>
+```
+
+## Workflows
+
+- [`cla-assistant`](#cla-assistant): CLA Assistant bot, with input values for customizable values.
+
+### CLA Assistant
+
+This workflow contains the CLA Assistant bot used througout CTF Pilot.
+
+It is setup to contain sensible defaults, but requires the `repository` input to be specified.
+
+#### Inputs
+
+- `repository`: The repository that the CLA is generated for
+- `version`: CLA version. Keep default to use organization default.
+- `CLASHA`: The SHA for the commit, the CLA version is. Keep default to use organization default.
+
+#### Secrets
+
+- `CLA_ASSISTANT_PAT`: CLA Repository Access Token. Required in order to push signatures to the CLA repository.
+
+#### How to use
+
+```yml
+name: "CLA Assistant"
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+jobs:
+  CLAAssistant:
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
+      statuses: write
+    name: "CLA Assistant"
+    uses: ctfpilot/ci/.github/workflows/cla-assistant@<version>
+    with:
+      repository: <repository>
+```
 
 ## Contributing
 
