@@ -78,7 +78,7 @@ The wofklow requires the `repository` input to be specified.
 
 #### Inputs
 
-- `repository`: The repository that the CLA is generated for
+- `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
 - `ENVIRONMENT`: The environment to deploy to.
 
 #### Secrets

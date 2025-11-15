@@ -8,7 +8,7 @@ on:
   workflow_call:
     inputs:
       repository:
-        description: "The repository to release"
+        description: "Allowed repository for workflow to run in. Example `ctfpilot/hello-world`."
         required: true
         type: string
       ENVIRONMENT:
