@@ -20,7 +20,7 @@ jobs:
     permissions:
       <permissions>
     name: <name>
-    uses: ctfpilot/ci/.github/workflows/<workflow>@<version>
+    uses: ctfpilot/ci/.github/workflows/<workflow>.yml@<version>
     with:
       <inputs>
 ```
@@ -65,7 +65,7 @@ jobs:
       pull-requests: write
       statuses: write
     name: "CLA Assistant"
-    uses: ctfpilot/ci/.github/workflows/cla-assistant@<version>
+    uses: ctfpilot/ci/.github/workflows/cla-assistant.yml@<version>
     with:
       repository: <repository>
 ```
@@ -108,7 +108,7 @@ jobs:
       packages: write
       id-token: write
     name: "Release"
-    uses: ctfpilot/ci/.github/workflows/release@<version>
+    uses: ctfpilot/ci/.github/workflows/release.yml@<version>
     with:
       repository: <repository>
 ```
