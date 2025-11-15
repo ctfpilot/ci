@@ -36,6 +36,8 @@ This workflow contains the CLA Assistant bot used througout CTF Pilot.
 
 It is setup to contain sensible defaults, but requires the `repository` input to be specified.
 
+The workflow can only be run within the `ctfpilot` organization.
+
 #### Inputs
 
 - `repository`: The repository that the CLA is generated for. Example `hello-world`.
