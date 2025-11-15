@@ -5,6 +5,26 @@ on:
     branches:
       - main
       - develop
+  workflow_call:
+    inputs:
+      repository:
+        description: "The repository to release"
+        required: true
+        type: string
+      ENVIRONMENT:
+        description: "The environment to deploy to."
+        required: false
+        type: string
+    secrets:
+      RELEASE_GH_TOKEN:
+        description: "GitHub Token. Used to authenticate with GitHub at release step. This will overwrite the use of the default GitHub token."
+        required: false
+      BUILD_GH_TOKEN:
+        description: "GitHub Token. Used to authenticate with GitHub at build step. This will overwrite the use of the default GitHub token."
+    outputs:
+      version:
+        description: "The version of the release. Will be null if no release was made."
+        value: ${{ jobs.release.outputs.version }}
 
 jobs:
   release:
@@ -13,5 +33,8 @@ jobs:
       packages: write
       id-token: write
     name: Release
-    if: github.repository == 'ctfpilot/ci'
-    uses: the0mikkel/ci/.github/workflows/semver-release-standalone.yml@v1.4.0
+    if: github.repository == ( inputs.repository || 'ctfpilot/ci')
+    uses: the0mikkel/ci/.github/workflows/semver-release-standalone.yml@v1.4.1
+    secrets: inherit
+    with:
+      ENVIRONMENT: ENVIRONMENT

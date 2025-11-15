@@ -27,7 +27,8 @@ jobs:
 
 ## Workflows
 
-- [`cla-assistant`](#cla-assistant): CLA Assistant bot, with input values for customizable values.
+- [`cla-assistant`](#cla-assistant): CLA Assistant bot
+- [`release`](#release): Release system
 
 ### CLA Assistant
 
@@ -65,6 +66,49 @@ jobs:
       statuses: write
     name: "CLA Assistant"
     uses: ctfpilot/ci/.github/workflows/cla-assistant@<version>
+    with:
+      repository: <repository>
+```
+
+### Release
+
+This workflow contains the release system used througout CTF Pilot.
+
+The wofklow requires the `repository` input to be specified.
+
+#### Inputs
+
+- `repository`: The repository that the CLA is generated for
+- `ENVIRONMENT`: The environment to deploy to.
+
+#### Secrets
+
+- `RELEASE_GH_TOKEN`: GitHub Token. Used to authenticate with GitHub at release step. This will overwrite the use of the default GitHub token.
+- `BUILD_GH_TOKEN`: GitHub Token. Used to authenticate with GitHub at build step. This will overwrite the use of the default GitHub token.
+
+#### Outputs
+
+- `version`: The version of the release. Will be null if no release was made.
+
+#### How to use
+
+```yml
+name: "Release"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  CLAAssistant:
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    name: "Release"
+    uses: ctfpilot/ci/.github/workflows/release@<version>
     with:
       repository: <repository>
 ```
