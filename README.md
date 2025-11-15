@@ -29,6 +29,7 @@ jobs:
 
 - [`cla-assistant`](#cla-assistant): CLA Assistant bot
 - [`release`](#release): Release system
+- [`docker`](#docker): Docker build and push system
 
 ### CLA Assistant
 
@@ -111,6 +112,54 @@ jobs:
       id-token: write
     name: "Release"
     uses: ctfpilot/ci/.github/workflows/release.yml@<version>
+    with:
+      repository: <repository>
+```
+
+### Docker
+
+This workflow contains the Docker build and push system used througout CTF Pilot.
+
+The wofklow requires the `repository` input to be specified.
+
+#### Inputs
+
+- `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
+- `dockerfile`: Dockerfile path.
+- `context`: Build context.
+- `arguments`: Build arguments. List of key-value pairs.
+- `semver`: Semantic version. Leave empty to not use semantic versioning.
+- `tags`: List of tags to apply to the image. Required if you do not use semantic versioning.
+- `registry`: Registry for docker image to use. Defaults to GitHub container registry.
+- `image_name`: Docker image name to use. Defaults to repository name.
+- `registry_username`: Username to use for registry login. Defaults to Github actor.
+- `registry_token`: Token to use for registry login. Defaults to GITHUB_TOKEN.
+- `fetch_submodules`: Fetch submodules. Defaults to true.
+- `platforms`: Platforms to build for (comma separated, e.g., linux/amd64,linux/arm64).
+- `runner`: Runner to use for the job. Defaults to ubuntu-latest
+- `cacheFrom`: Cache type from
+- `cacheTo`: Cache type to
+- `commit`: Commit SHA to use for git operations and tagging. Defaults to github.sha.
+
+#### How to use
+
+```yml
+name: "Docker build and push"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  CLAAssistant:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    name: "Docker build and push"
+    uses: ctfpilot/ci/.github/workflows/docker.yml@<version>
     with:
       repository: <repository>
 ```
