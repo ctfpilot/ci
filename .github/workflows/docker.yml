@@ -43,7 +43,7 @@ on:
         default: ${{ github.repository }}
         type: string
       registry_username:
-        description: "Username to use for registry login. Defaults to Github actor."
+        description: "Username to use for registry login. Defaults to GitHub actor."
         required: false
         type: string
       registry_token:

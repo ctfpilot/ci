@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > This CI repository is meant for internal usage within the CTFPilot organization.
 
-This repository contains Continuous intergration automation, in the forms of Github Action workflows.  
+This repository contains Continuous intergration automation, in the forms of GitHub Action workflows.  
 
 ## How to use
 
@@ -33,7 +33,7 @@ jobs:
 
 ### CLA Assistant
 
-This workflow contains the CLA Assistant bot used througout CTF Pilot.
+This workflow contains the CLA Assistant bot used throughout CTF Pilot.
 
 It is setup to contain sensible defaults, but requires the `repository` input to be specified.
 
@@ -75,9 +75,9 @@ jobs:
 
 ### Release
 
-This workflow contains the release system used througout CTF Pilot.
+This workflow contains the release system used throughout CTF Pilot.
 
-The wofklow requires the `repository` input to be specified.
+The workflow requires the `repository` input to be specified.
 
 #### Inputs
 
@@ -118,7 +118,7 @@ jobs:
 
 ### Docker
 
-This workflow contains the Docker build and push system used througout CTF Pilot.
+This workflow contains the Docker build and push system used throughout CTF Pilot.
 
 The wofklow requires the `repository` input to be specified.
 
@@ -132,7 +132,7 @@ The wofklow requires the `repository` input to be specified.
 - `tags`: List of tags to apply to the image. Required if you do not use semantic versioning.
 - `registry`: Registry for docker image to use. Defaults to GitHub container registry.
 - `image_name`: Docker image name to use. Defaults to repository name.
-- `registry_username`: Username to use for registry login. Defaults to Github actor.
+- `registry_username`: Username to use for registry login. Defaults to GitHub actor.
 - `registry_token`: Token to use for registry login. Defaults to GITHUB_TOKEN.
 - `fetch_submodules`: Fetch submodules. Defaults to true.
 - `platforms`: Platforms to build for (comma separated, e.g., linux/amd64,linux/arm64).
