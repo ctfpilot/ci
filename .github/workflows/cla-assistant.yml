@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       repository:
-        description: "The repository that the CLA is generated for"
+        description: "The repository that the CLA is generated for. Example `hello-world`."
         required: true
         type: string
       version:
@@ -43,7 +43,7 @@ jobs:
 
           # branch should not be protected
           branch: "main"
-          allowlist: ""
+          allowlist: "semantic-release-bot"
           lock-pullrequest-aftermerge: false
           use-dco-flag: false
 

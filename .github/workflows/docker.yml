@@ -1,0 +1,107 @@
+name: Docker build and push
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: "Allowed repository for workflow to run in. Example `ctfpilot/hello-world`."
+        required: true
+        type: string
+      dockerfile:
+        description: "Dockerfile path."
+        required: false
+        default: "./Dockerfile"
+        type: string
+      context:
+        description: "Build context."
+        required: false
+        default: "."
+        type: string
+      arguments:
+        description: "Build arguments. List of key-value pairs."
+        required: false
+        default: ""
+        type: string
+      semver:
+        description: "Semantic version. Leave empty to not use semantic versioning."
+        required: false
+        default: ""
+        type: string
+      tags:
+        description: "List of tags to apply to the image. Required if you do not use semantic versioning."
+        required: false
+        default: |
+          type=raw,value=${{ github.sha }}
+        type: string
+      registry:
+        description: "Registry for docker image to use. Defaults to GitHub container registry."
+        required: false
+        default: ghcr.io
+        type: string
+      image_name:
+        description: "Docker image name to use. Defaults to repository name."
+        required: false
+        default: ${{ github.repository }}
+        type: string
+      registry_username:
+        description: "Username to use for registry login. Defaults to GitHub actor."
+        required: false
+        type: string
+      registry_token:
+        description: "Token to use for registry login. Defaults to GITHUB_TOKEN."
+        required: false
+        type: string
+      fetch_submodules:
+        description: "Fetch submodules. Defaults to true."
+        required: false
+        default: true
+        type: boolean
+      platforms:
+        description: "Platforms to build for (comma separated, e.g., linux/amd64,linux/arm64)."
+        required: false
+        default: linux/amd64
+        type: string
+      runner:
+        description: "Runner to use for the job. Defaults to ubuntu-latest."
+        required: false
+        default: ubuntu-latest
+        type: string
+      cacheFrom:
+        description: "Cache type from"
+        required: false
+        type: string
+        default: type=gha
+      cacheTo:
+        description: "Cache type to"
+        required: false
+        type: string
+        default: type=gha,mode=max
+      commit:
+        description: "Commit SHA to use for git operations and tagging. Defaults to github.sha."
+        required: false
+        default: ${{ github.sha }}
+        type: string
+
+jobs:
+  docker:
+    uses: the0mikkel/ci/.github/workflows/docker.yml@v1.4.1
+    if: github.repository == inputs.repository
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    with:
+      dockerfile: ${{ inputs.dockerfile }}
+      context: ${{ inputs.context }}
+      arguments: ${{ inputs.arguments }}
+      semver: ${{ inputs.semver }}
+      tags: ${{ inputs.tags }}
+      registry: ${{ inputs.registry }}
+      image_name: ${{ inputs.image_name }}
+      registry_username: ${{ inputs.registry_username }}
+      registry_token: ${{ inputs.registry_token }}
+      fetch_submodules: ${{ inputs.fetch_submodules }}
+      platforms: ${{ inputs.platforms }}
+      runner: ${{ inputs.runner }}
+      cacheFrom: ${{ inputs.cacheFrom }}
+      cacheTo: ${{ inputs.cacheTo }}
+      commit: ${{ inputs.commit }}

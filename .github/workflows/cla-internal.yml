@@ -1,0 +1,24 @@
+# -----------
+# NOTICE: This workflow is for internal use within the CI repository
+# -----------
+
+name: "CLA Assistant"
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+jobs:
+  CLAAssistant:
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
+      statuses: write
+    name: "CLA Assistant"
+    uses: ctfpilot/ci/.github/workflows/cla-assistant.yml@v1.0.0
+    secrets: inherit
+    with:
+      repository: ci

@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > This CI repository is meant for internal usage within the CTFPilot organization.
 
-This repository contains Continuous intergration automation, in the forms of Github Action workflows.  
+This repository contains Continuous intergration automation, in the forms of GitHub Action workflows.  
 
 ## How to use
 
@@ -20,7 +20,7 @@ jobs:
     permissions:
       <permissions>
     name: <name>
-    uses: ctfpilot/ci/.github/workflows/<workflow>@<version>
+    uses: ctfpilot/ci/.github/workflows/<workflow>.yml@<version>
     with:
       <inputs>
 ```
@@ -29,16 +29,19 @@ jobs:
 
 - [`cla-assistant`](#cla-assistant): CLA Assistant bot
 - [`release`](#release): Release system
+- [`docker`](#docker): Docker build and push system
 
 ### CLA Assistant
 
-This workflow contains the CLA Assistant bot used througout CTF Pilot.
+This workflow contains the CLA Assistant bot used throughout CTF Pilot.
 
 It is setup to contain sensible defaults, but requires the `repository` input to be specified.
 
+The workflow can only be run within the `ctfpilot` organization.
+
 #### Inputs
 
-- `repository`: The repository that the CLA is generated for
+- `repository`: The repository that the CLA is generated for. Example `hello-world`.
 - `version`: CLA version. Keep default to use organization default.
 - `CLASHA`: The SHA for the commit, the CLA version is. Keep default to use organization default.
 
@@ -65,20 +68,21 @@ jobs:
       pull-requests: write
       statuses: write
     name: "CLA Assistant"
-    uses: ctfpilot/ci/.github/workflows/cla-assistant@<version>
+    uses: ctfpilot/ci/.github/workflows/cla-assistant.yml@<version>
+    secrets: inherit
     with:
       repository: <repository>
 ```
 
 ### Release
 
-This workflow contains the release system used througout CTF Pilot.
+This workflow contains the release system used throughout CTF Pilot.
 
-The wofklow requires the `repository` input to be specified.
+The workflow requires the `repository` input to be specified.
 
 #### Inputs
 
-- `repository`: The repository that the CLA is generated for
+- `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
 - `ENVIRONMENT`: The environment to deploy to.
 
 #### Secrets
@@ -108,7 +112,55 @@ jobs:
       packages: write
       id-token: write
     name: "Release"
-    uses: ctfpilot/ci/.github/workflows/release@<version>
+    uses: ctfpilot/ci/.github/workflows/release.yml@<version>
+    with:
+      repository: <repository>
+```
+
+### Docker
+
+This workflow contains the Docker build and push system used throughout CTF Pilot.
+
+The workflow requires the `repository` input to be specified.
+
+#### Inputs
+
+- `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
+- `dockerfile`: Dockerfile path.
+- `context`: Build context.
+- `arguments`: Build arguments. List of key-value pairs.
+- `semver`: Semantic version. Leave empty to not use semantic versioning.
+- `tags`: List of tags to apply to the image. Required if you do not use semantic versioning.
+- `registry`: Registry for docker image to use. Defaults to GitHub container registry.
+- `image_name`: Docker image name to use. Defaults to repository name.
+- `registry_username`: Username to use for registry login. Defaults to GitHub actor.
+- `registry_token`: Token to use for registry login. Defaults to GITHUB_TOKEN.
+- `fetch_submodules`: Fetch submodules. Defaults to true.
+- `platforms`: Platforms to build for (comma separated, e.g., linux/amd64,linux/arm64).
+- `runner`: Runner to use for the job. Defaults to ubuntu-latest
+- `cacheFrom`: Cache type from
+- `cacheTo`: Cache type to
+- `commit`: Commit SHA to use for git operations and tagging. Defaults to github.sha.
+
+#### How to use
+
+```yml
+name: "Docker build and push"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  CLAAssistant:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    name: "Docker build and push"
+    uses: ctfpilot/ci/.github/workflows/docker.yml@<version>
     with:
       repository: <repository>
 ```
