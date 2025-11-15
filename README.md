@@ -38,7 +38,7 @@ It is setup to contain sensible defaults, but requires the `repository` input to
 
 #### Inputs
 
-- `repository`: The repository that the CLA is generated for
+- `repository`: The repository that the CLA is generated for. Example `hello-world`.
 - `version`: CLA version. Keep default to use organization default.
 - `CLASHA`: The SHA for the commit, the CLA version is. Keep default to use organization default.
 

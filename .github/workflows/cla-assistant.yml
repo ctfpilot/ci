@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       repository:
-        description: "The repository that the CLA is generated for"
+        description: "The repository that the CLA is generated for. Example `hello-world`."
         required: true
         type: string
       version:
