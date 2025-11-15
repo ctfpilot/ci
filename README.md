@@ -69,6 +69,7 @@ jobs:
       statuses: write
     name: "CLA Assistant"
     uses: ctfpilot/ci/.github/workflows/cla-assistant.yml@<version>
+    secrets: inherit
     with:
       repository: <repository>
 ```
