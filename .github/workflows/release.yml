@@ -37,4 +37,4 @@ jobs:
     uses: the0mikkel/ci/.github/workflows/semver-release-standalone.yml@v1.4.1
     secrets: inherit
     with:
-      ENVIRONMENT: ENVIRONMENT
+      ENVIRONMENT: ${{ inputs.ENVIRONMENT }}
