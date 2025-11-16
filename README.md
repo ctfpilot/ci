@@ -182,7 +182,7 @@ The workflow intelligently handles different merge scenarios:
 
 This ensures that hotfixes and other direct merges to `main` are properly reviewed before being merged back to `develop`.
 
-If a merge is not detected, the main and develop branches are already in sync or an existing PR between main and develop exists, the workflow will exit without making any changes.
+If a merge is not detected, the main and develop branches are already in sync or an existing PR between main and develop exists, the workflow will exit without merging changes, but will create a PR if possible.
 
 #### Inputs
 
