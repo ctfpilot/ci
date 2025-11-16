@@ -30,7 +30,7 @@ jobs:
 - [`cla-assistant`](#cla-assistant): CLA Assistant bot
 - [`release`](#release): Release system
 - [`docker`](#docker): Docker build and push system
-- [`develop-update`](./develop-update/README.md): Update develop branch to match main branch
+- [`develop-update`](#develop-update): Update develop branch to match main branch
 
 ### CLA Assistant
 
