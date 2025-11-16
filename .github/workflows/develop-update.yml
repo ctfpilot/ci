@@ -36,6 +36,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
+      
+      # Ensure diff between main and develop
       - name: "Check if there is a diff between main and develop"
         id: check_diff
         run: |
@@ -67,8 +69,10 @@ jobs:
               return 'false';
             }
           result-encoding: string
+
+      # Ensure labels exist
       - name: 'Ensure "develop-update" label is created'
-        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        if: steps.check_pr.outputs.result == 'false'
         uses: actions/github-script@v6
         with:
           script: |
@@ -92,7 +96,7 @@ jobs:
               }
             }
       - name: 'Ensure "ci" label is created'
-        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        if: steps.check_pr.outputs.result == 'false'
         uses: actions/github-script@v6
         with:
           script: |
@@ -115,6 +119,8 @@ jobs:
                 throw error;
               }
             }
+      
+      # PR Creation
       - name: "Create Pull Request to update develop branch, and merge it"
         id: create_pr
         if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
@@ -123,8 +129,10 @@ jobs:
           echo "URL=$URL" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Auto merge handling
       - name: "Check if latest commit was a merge commit from develop"
-        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge == true
         id: check_merge_source
         run: |
           # Check if latest commit is a merge commit
@@ -157,17 +165,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Create warning for non-develop merge"
-        if: steps.check_merge_source.outputs.latest_from_develop == 'false' && inputs.auto_merge == true
+        if: steps.check_merge_source.outputs.latest_from_develop == 'false'
         run: |
           echo "::warning::Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Auto-merge will be skipped to allow manual review."
       - name: "Comment on PR about skipped auto-merge"
-        if: steps.create_pr.outputs.URL != '' && steps.check_pr.outputs.result == 'false' && steps.check_merge_source.outputs.latest_from_develop == 'false' && inputs.auto_merge == true
-        uses: actions/github-script@v6
-        with:
-          script: |
-            gh PR comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
+        if: steps.check_merge_source.outputs.latest_from_develop == 'false'
+        run: |
+          gh PR comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
       - name: "Auto-merge Pull Request"
-        if: (steps.create_pr.outputs.URL != '' || (steps.check_pr.outputs.result == 'false' && steps.check_merge_source.outputs.latest_from_develop == 'true')) && inputs.auto_merge == true
+        if: steps.check_merge_source.outputs.latest_from_develop == 'true'
         run: |
           if [ -n "${{ steps.create_pr.outputs.URL }}" ]; then
             PR_URL="${{ steps.create_pr.outputs.URL }}"
