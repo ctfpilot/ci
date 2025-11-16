@@ -111,7 +111,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.RELEASE_GH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: npx semantic-release 2>&1 semantic-release.log
+        run: |
+          npx semantic-release 2>&1 | tee semantic-release.log
+          status=${PIPESTATUS[0]}
+          exit $status
       - name: Archive release log
         uses: actions/upload-artifact@v5
         with:
