@@ -27,7 +27,7 @@ on:
         value: ${{ jobs.semantic-realease.outputs.version }}
 
 jobs:
-   semantic-realease:
+  semantic-release:
     name: Semantic release
     runs-on: ubuntu-latest
     environment: ${{ inputs.ENVIRONMENT || '' }}
