@@ -126,14 +126,19 @@ jobs:
         id: create_pr
         if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
         run: |
-          URL=$(gh pr create -B develop -H main --title 'CI: Update develop to match main' --body 'Merge main into develop to update the develop branch to the latest version\n\n${{ inputs.pr_description || '' }}' --label develop-update --label ci)
+          PR_BODY='Merge main into develop to update the develop branch to the latest version'
+          if [ -n "$PR_DESCRIPTION" ]; then
+            PR_BODY="${PR_BODY}"$'\n\n'"${PR_DESCRIPTION}"
+          fi
+          URL=$(gh pr create -B develop -H main --title 'CI: Update develop to match main' --body "$PR_BODY" --label develop-update --label ci)
           echo "URL=$URL" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_DESCRIPTION: ${{ inputs.pr_description }}
 
       # Auto merge handling
       - name: "Check if latest commit was a merge commit from develop"
-        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge == true
+        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge != false
         id: check_merge_source
         run: |
           # Check if latest commit is a merge commit
@@ -176,7 +181,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Auto-merge Pull Request"
-        if: steps.check_merge_source.outputs.latest_from_develop == 'true'
+        if: steps.check_merge_source.outputs.latest_from_develop == 'true' && inputs.auto_merge != false
         run: |
           gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
         env:
