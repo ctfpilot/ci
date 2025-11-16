@@ -1,0 +1,128 @@
+# This workflow opens a PR between main and develop branches to keep develop up to date.
+name: "Update Develop Branch"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      repository:
+        description: "Allowed repository for workflow to run in. Example `ctfpilot/hello-world`."
+        required: true
+        type: string
+      auto_merge:
+        description: "Whether to automatically merge the PR after creating it."
+        required: false
+        type: boolean
+        default: true
+      pr_description:
+        description: "Additional description to add to the PR body."
+        required: false
+        type: string
+
+jobs:
+  update-develop:
+    name: "Update Develop Branch"
+    runs-on: ubuntu-latest
+    if: github.repository == ( inputs.repository || 'ctfpilot/ci') && github.ref == 'refs/heads/main'
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repository }}
+          ref: main
+      - name: "Check if there is a diff between main and develop"
+        id: check_diff
+        run: |
+          git fetch origin develop
+          DIFF=$(git diff origin/develop..main)
+          if [ -z "$DIFF" ]; then
+            echo "No differences found between main and develop."
+            echo "diff=false" >> $GITHUB_OUTPUT
+          else
+            echo "Differences found between main and develop."
+            echo "diff=true" >> $GITHUB_OUTPUT
+          fi
+      - name: "Check if existing PR exists"
+        if: steps.check_diff.outputs.diff == 'true'
+        id: check_pr
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: pullRequests } = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:develop`,
+              base: 'main',
+              state: 'open'
+            });
+            if (pullRequests.length > 0) {
+              return 'true';
+            } else {
+              return 'false';
+            }
+          result-encoding: string
+      - name: "Ensure \"develop-update\" label is created"
+        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'develop-update'
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'develop-update',
+                  color: '0E8A16',
+                  description: 'Indicates that this PR updates the develop branch to match the latest version of main.'
+                });
+              } else {
+                throw error;
+              }
+            }
+      - name: "Ensure \"ci\" label is created"
+        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'ci'
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'ci',
+                  color: 'EDEDED',
+                  description: 'Indicates that this PR is related to continuous integration.'
+                });
+              } else {
+                throw error;
+              }
+            }
+      - name: "Create Pull Request to update develop branch, and merge it"
+        id: create_pr
+        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        run: >-
+          URL=$(gh pr create -B develop -H main --title 'CI: Update develop to match main' --body 'Merge main into develop to update the develop branch to the latest version\n\n${{ inputs.pr_description || '' }}' --label develop-update --label ci)
+          echo "URL=$URL" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Auto-merge Pull Request"
+        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge == true
+        run: |
+          gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    

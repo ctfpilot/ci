@@ -30,6 +30,7 @@ jobs:
 - [`cla-assistant`](#cla-assistant): CLA Assistant bot
 - [`release`](#release): Release system
 - [`docker`](#docker): Docker build and push system
+- [`develop-update`](./develop-update/README.md): Update develop branch to match main branch
 
 ### CLA Assistant
 
@@ -161,6 +162,36 @@ jobs:
       id-token: write
     name: "Docker build and push"
     uses: ctfpilot/ci/.github/workflows/docker.yml@<version>
+    with:
+      repository: <repository>
+```
+
+### Develop Update
+
+This workflow updates the `develop` branch to match the latest version of the `main` branch.
+
+The workflow requires the `repository` input to be specified.
+
+#### Inputs
+
+- `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
+- `auto_merge`: Whether to automatically merge the PR after creating it. Defaults to true.
+- `pr_description`: Additional description to add to the PR body.
+
+#### How to use
+
+```yml
+name: "Update Develop Branch"
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  CLAAssistant:
+    name: "Update Develop Branch"
+    uses: ctfpilot/ci/.github/workflows/develop-update.yml@<version>
     with:
       repository: <repository>
 ```
