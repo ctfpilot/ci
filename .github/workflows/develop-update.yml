@@ -58,8 +58,8 @@ jobs:
             const { data: pullRequests } = await github.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:develop`,
-              base: 'main',
+              head: `main`,
+              base: '${context.repo.owner}:develop',
               state: 'open'
             });
             if (pullRequests.length > 0) {
@@ -169,8 +169,8 @@ jobs:
             const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:develop`,
-              base: 'main',
+              head: ``,
+              base: '${context.repo.owner}:developmain',
               state: 'open'
             });
             if (pullRequests.length > 0) {
