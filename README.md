@@ -172,17 +172,6 @@ This workflow updates the `develop` branch to match the latest version of the `m
 
 The workflow requires the `repository` input to be specified.
 
-The workflow intelligently handles different merge scenarios:
-
-- **Normal develop flow**: When the latest commit on `main` was merged from a `develop` PR.
-  - Create a PR from `main` to `develop` with the changes.
-- **Hotfix detection**: When the latest commit on `main` was merged from a different branch (e.g., a hotfix), the workflow will:
-  - Create a PR from `main` to `develop` with the changes.
-  - Add a comment to the PR explaining the situation
-  - Create a workflow warning for visibility
-
-This ensures that hotfixes and other direct merges to `main` are properly reviewed before being merged back to `develop`.
-
 If no commits are found in `main` that aren't in `develop`, or an existing PR between main and develop exists, the workflow will exit without merging changes, but will create a PR if possible.
 
 #### Inputs
