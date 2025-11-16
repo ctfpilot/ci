@@ -54,10 +54,10 @@ jobs:
       - name: "Check if existing PR exists"
         if: steps.check_diff.outputs.diff == 'true'
         id: check_pr
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
-            const { data: pullRequests } = await github.pulls.list({
+            const { data: pullRequests } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               head: 'main',
@@ -98,18 +98,18 @@ jobs:
             }
       - name: 'Ensure "ci" label is created'
         if: steps.check_pr.outputs.result == 'false'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v8
         with:
           script: |
             try {
-              await github.issues.getLabel({
+              await github.rest.issues.getLabel({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 name: 'ci'
               });
             } catch (error) {
               if (error.status === 404) {
-                await github.issues.createLabel({
+                await github.rest.issues.createLabel({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   name: 'ci',
