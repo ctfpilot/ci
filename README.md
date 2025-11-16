@@ -174,9 +174,10 @@ The workflow requires the `repository` input to be specified.
 
 The workflow intelligently handles different merge scenarios:
 
-- **Normal develop flow**: When the latest commit on `main` was merged from a `develop` PR, the workflow will auto-merge (if enabled) to keep develop synchronized.
+- **Normal develop flow**: When the latest commit on `main` was merged from a `develop` PR.
+  - Create a PR from `main` to `develop` with the changes.
 - **Hotfix detection**: When the latest commit on `main` was merged from a different branch (e.g., a hotfix), the workflow will:
-  - Skip auto-merge to allow manual review
+  - Create a PR from `main` to `develop` with the changes.
   - Add a comment to the PR explaining the situation
   - Create a workflow warning for visibility
 
@@ -187,7 +188,6 @@ If no commits are found in `main` that aren't in `develop`, or an existing PR be
 #### Inputs
 
 - `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
-- `auto_merge`: Whether to automatically merge the PR after creating it. Defaults to true. Note: Auto-merge will be skipped if the latest commit on `main` was not from a `develop` branch PR.
 - `pr_description`: Additional description to add to the PR body.
 
 #### How to use
