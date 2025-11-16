@@ -48,7 +48,7 @@ jobs:
         id: check_diff
         if: github.ref == 'refs/heads/develop'
         run: |
-          git fetch origin develop
+          git fetch origin main
           # Check if there are commits in main that aren't in develop
           COMMITS=$(git rev-list origin/develop..origin/main --count)
           if [ "$COMMITS" -eq 0 ]; then
