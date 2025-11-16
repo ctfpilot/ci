@@ -36,18 +36,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-      
+
       # Ensure diff between main and develop
       - name: "Check if there is a diff between main and develop"
         id: check_diff
         run: |
           git fetch origin develop
-          DIFF=$(git diff origin/develop..main)
-          if [ -z "$DIFF" ]; then
-            echo "No differences found between main and develop."
+          # Check if there are commits in main that aren't in develop
+          COMMITS=$(git rev-list origin/develop..main --count)
+          if [ "$COMMITS" -eq 0 ]; then
+            echo "No commits found in main that aren't in develop. Develop is up to date or ahead."
             echo "diff=false" >> $GITHUB_OUTPUT
           else
-            echo "Differences found between main and develop."
+            echo "Found $COMMITS commit(s) in main that aren't in develop."
             echo "diff=true" >> $GITHUB_OUTPUT
           fi
       - name: "Check if existing PR exists"
@@ -119,7 +120,7 @@ jobs:
                 throw error;
               }
             }
-      
+
       # PR Creation
       - name: "Create Pull Request to update develop branch, and merge it"
         id: create_pr
