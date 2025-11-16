@@ -43,7 +43,7 @@ jobs:
 
           # branch should not be protected
           branch: "main"
-          allowlist: "semantic-release-bot,semantic-release[bot]"
+          allowlist: semantic-release-bot,semantic-release[bot]
           lock-pullrequest-aftermerge: false
           use-dco-flag: false
 
