@@ -1,0 +1,182 @@
+# This workflow opens a PR between main and develop branches to keep develop up to date.
+name: "Update Develop Branch"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_call:
+    inputs:
+      repository:
+        description: "Allowed repository for workflow to run in. Example `ctfpilot/hello-world`."
+        required: true
+        type: string
+      auto_merge:
+        description: "Whether to automatically merge the PR after creating it."
+        required: false
+        type: boolean
+        default: true
+      pr_description:
+        description: "Additional description to add to the PR body."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  update-develop:
+    name: "Update Develop Branch"
+    runs-on: ubuntu-latest
+    if: github.repository == ( inputs.repository || 'ctfpilot/ci') && github.ref == 'refs/heads/main'
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      
+      # Ensure diff between main and develop
+      - name: "Check if there is a diff between main and develop"
+        id: check_diff
+        run: |
+          git fetch origin develop
+          DIFF=$(git diff origin/develop..main)
+          if [ -z "$DIFF" ]; then
+            echo "No differences found between main and develop."
+            echo "diff=false" >> $GITHUB_OUTPUT
+          else
+            echo "Differences found between main and develop."
+            echo "diff=true" >> $GITHUB_OUTPUT
+          fi
+      - name: "Check if existing PR exists"
+        if: steps.check_diff.outputs.diff == 'true'
+        id: check_pr
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: pullRequests } = await github.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: 'main',
+              base: 'develop',
+              state: 'open'
+            });
+            if (pullRequests.length > 0) {
+              return 'true';
+            } else {
+              return 'false';
+            }
+          result-encoding: string
+
+      # Ensure labels exist
+      - name: 'Ensure "develop-update" label is created'
+        if: steps.check_pr.outputs.result == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'develop-update'
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'develop-update',
+                  color: '0E8A16',
+                  description: 'Indicates that this PR updates the develop branch to match the latest version of main.'
+                });
+              } else {
+                throw error;
+              }
+            }
+      - name: 'Ensure "ci" label is created'
+        if: steps.check_pr.outputs.result == 'false'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            try {
+              await github.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'ci'
+              });
+            } catch (error) {
+              if (error.status === 404) {
+                await github.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'ci',
+                  color: 'EDEDED',
+                  description: 'Indicates that this PR is related to continuous integration.'
+                });
+              } else {
+                throw error;
+              }
+            }
+      
+      # PR Creation
+      - name: "Create Pull Request to update develop branch, and merge it"
+        id: create_pr
+        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        run: |
+          URL=$(gh pr create -B develop -H main --title 'CI: Update develop to match main' --body 'Merge main into develop to update the develop branch to the latest version\n\n${{ inputs.pr_description || '' }}' --label develop-update --label ci)
+          echo "URL=$URL" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Auto merge handling
+      - name: "Check if latest commit was a merge commit from develop"
+        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge == true
+        id: check_merge_source
+        run: |
+          # Check if latest commit is a merge commit
+          if git rev-parse --verify HEAD^2 &>/dev/null; then
+            echo "Latest commit is a merge commit"
+            # Get PR number from merge commit message
+            PR_NUMBER=$(git log -1 --pretty=%B | grep -oP 'Merge pull request #\K[0-9]+' || echo "")
+            if [ -n "$PR_NUMBER" ]; then
+              echo "Found PR number: $PR_NUMBER"
+              # Use gh CLI to check PR head branch
+              HEAD_BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName -q .headRefName || echo "")
+              echo "PR head branch: $HEAD_BRANCH"
+              if [ "$HEAD_BRANCH" = "develop" ]; then
+                echo "latest_from_develop=true" >> $GITHUB_OUTPUT
+                echo "✓ Latest commit merged from develop branch PR"
+              else
+                echo "latest_from_develop=false" >> $GITHUB_OUTPUT
+                echo "head_branch=$HEAD_BRANCH" >> $GITHUB_OUTPUT
+                echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+                echo "⚠ Latest commit merged from '$HEAD_BRANCH' branch (not develop)"
+              fi
+            else
+              echo "latest_from_develop=unknown" >> $GITHUB_OUTPUT
+              echo "Could not determine PR number from merge commit"
+            fi
+          else
+            echo "latest_from_develop=not_merge" >> $GITHUB_OUTPUT
+            echo "Latest commit is not a merge commit"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Create warning for non-develop merge"
+        if: steps.check_merge_source.outputs.latest_from_develop == 'false'
+        run: |
+          echo "::warning::Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Auto-merge will be skipped to allow manual review."
+      - name: "Comment on PR about skipped auto-merge"
+        if: steps.check_merge_source.outputs.latest_from_develop == 'false'
+        run: |
+          gh pr comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Auto-merge Pull Request"
+        if: steps.check_merge_source.outputs.latest_from_develop == 'true'
+        run: |
+          gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
