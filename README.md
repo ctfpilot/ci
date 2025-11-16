@@ -190,6 +190,10 @@ on:
 
 jobs:
   CLAAssistant:
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     name: "Update Develop Branch"
     uses: ctfpilot/ci/.github/workflows/develop-update.yml@<version>
     with:

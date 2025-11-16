@@ -21,6 +21,11 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   update-develop:
     name: "Update Develop Branch"
