@@ -181,7 +181,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Auto-merge Pull Request"
-        if: steps.check_merge_source.outputs.latest_from_develop == 'true' && inputs.auto_merge != false
+        if: (steps.check_merge_source.outputs.latest_from_develop == 'true' || steps.check_merge_source.outputs.latest_from_develop == 'not_merge') && inputs.auto_merge != false
         run: |
           gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
         env:
