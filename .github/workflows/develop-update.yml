@@ -175,14 +175,6 @@ jobs:
       - name: "Auto-merge Pull Request"
         if: steps.check_merge_source.outputs.latest_from_develop == 'true'
         run: |
-          if [ -n "${{ steps.create_pr.outputs.URL }}" ]; then
-            PR_URL="${{ steps.create_pr.outputs.URL }}"
-          else
-            # Get existing PR URL
-            PR_URL=$(gh pr list --head develop --base main --state open --json url --jq '.[0].url')
-          fi
-          if [ -n "$PR_URL" ]; then
-            gh pr merge "$PR_URL" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
-          fi
+          gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
