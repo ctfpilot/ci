@@ -122,4 +122,4 @@ jobs:
           path: semantic-release.log
       - name: Get version
         id: version
-        run: echo version=$(cat semantic-release.log | grep -oP "next release version is \K.*") >> $GITHUB_OUTPUT
+        run: echo version=$(grep -oP "next release version is \K.*" semantic-release.log || echo "") >> $GITHUB_OUTPUT
