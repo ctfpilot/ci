@@ -11,11 +11,6 @@ on:
         description: "Allowed repository for workflow to run in. Example `ctfpilot/hello-world`."
         required: true
         type: string
-      auto_merge:
-        description: "Whether to automatically merge the PR after creating it."
-        required: false
-        type: boolean
-        default: true
       pr_description:
         description: "Additional description to add to the PR body."
         required: false
@@ -135,54 +130,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_DESCRIPTION: ${{ inputs.pr_description }}
-
-      # Auto merge handling
-      - name: "Check if latest commit was a merge commit from develop"
-        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge != false
-        id: check_merge_source
-        run: |
-          # Check if latest commit is a merge commit
-          if git rev-parse --verify HEAD^2 &>/dev/null; then
-            echo "Latest commit is a merge commit"
-            # Get PR number from merge commit message
-            PR_NUMBER=$(git log -1 --pretty=%B | grep -oP 'Merge pull request #\K[0-9]+' || echo "")
-            if [ -n "$PR_NUMBER" ]; then
-              echo "Found PR number: $PR_NUMBER"
-              # Use gh CLI to check PR head branch
-              HEAD_BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName -q .headRefName || echo "")
-              echo "PR head branch: $HEAD_BRANCH"
-              if [ "$HEAD_BRANCH" = "develop" ]; then
-                echo "latest_from_develop=true" >> $GITHUB_OUTPUT
-                echo "✓ Latest commit merged from develop branch PR"
-              else
-                echo "latest_from_develop=false" >> $GITHUB_OUTPUT
-                echo "head_branch=$HEAD_BRANCH" >> $GITHUB_OUTPUT
-                echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-                echo "⚠ Latest commit merged from '$HEAD_BRANCH' branch (not develop)"
-              fi
-            else
-              echo "latest_from_develop=unknown" >> $GITHUB_OUTPUT
-              echo "Could not determine PR number from merge commit"
-            fi
-          else
-            echo "latest_from_develop=not_merge" >> $GITHUB_OUTPUT
-            echo "Latest commit is not a merge commit"
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: "Create warning for non-develop merge"
-        if: steps.check_merge_source.outputs.latest_from_develop == 'false'
-        run: |
-          echo "::warning::Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Auto-merge will be skipped to allow manual review."
-      - name: "Comment on PR about skipped auto-merge"
-        if: steps.check_merge_source.outputs.latest_from_develop == 'false'
-        run: |
-          gh pr comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: "Auto-merge Pull Request"
-        if: (steps.check_merge_source.outputs.latest_from_develop == 'true' || steps.check_merge_source.outputs.latest_from_develop == 'not_merge') && inputs.auto_merge != false
-        run: |
-          gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge --auto
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
