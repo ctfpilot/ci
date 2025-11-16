@@ -43,6 +43,29 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: "Check if develop is up to date with main"
+        id: check_diff
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          git fetch origin develop
+          # Check if there are commits in main that aren't in develop
+          COMMITS=$(git rev-list origin/develop..main --count)
+          if [ "$COMMITS" -eq 0 ]; then
+            echo "No commits found in main that aren't in develop. Develop is up to date or ahead."
+            echo "diff=false" >> $GITHUB_OUTPUT
+          else
+            echo "Found $COMMITS commit(s) in main that aren't in develop."
+            echo "diff=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fail if develop is not up to date with main
+        if: steps.check_diff.outputs.diff == 'true' && github.ref == 'refs/heads/develop'
+        run: |
+          echo "Develop branch is not up to date with main. Please update develop before releasing."
+          echo "::error title=Develop branch out of date::Develop branch is not up to date with main. Please update develop before releasing."
+          exit 1
+
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
