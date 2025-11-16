@@ -68,7 +68,7 @@ jobs:
               return 'false';
             }
           result-encoding: string
-      - name: "Ensure \"develop-update\" label is created"
+      - name: 'Ensure "develop-update" label is created'
         if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
         uses: actions/github-script@v6
         with:
@@ -92,7 +92,7 @@ jobs:
                 throw error;
               }
             }
-      - name: "Ensure \"ci\" label is created"
+      - name: 'Ensure "ci" label is created'
         if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
         uses: actions/github-script@v6
         with:
@@ -124,10 +124,75 @@ jobs:
           echo "URL=$URL" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: "Auto-merge Pull Request"
-        if: steps.create_pr.outputs.URL != '' && inputs.auto_merge == true
+      - name: "Check if latest commit was a merge commit from develop"
+        if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
+        id: check_merge_source
         run: |
-          gh pr merge "${{ steps.create_pr.outputs.URL }}" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
+          # Check if latest commit is a merge commit
+          if git rev-parse --verify HEAD^2 &>/dev/null; then
+            echo "Latest commit is a merge commit"
+            # Get PR number from merge commit message
+            PR_NUMBER=$(git log -1 --pretty=%B | grep -oP 'Merge pull request #\K[0-9]+' || echo "")
+            if [ -n "$PR_NUMBER" ]; then
+              echo "Found PR number: $PR_NUMBER"
+              # Use gh CLI to check PR head branch
+              HEAD_BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName -q .headRefName || echo "")
+              echo "PR head branch: $HEAD_BRANCH"
+              if [ "$HEAD_BRANCH" = "develop" ]; then
+                echo "latest_from_develop=true" >> $GITHUB_OUTPUT
+                echo "✓ Latest commit merged from develop branch PR"
+              else
+                echo "latest_from_develop=false" >> $GITHUB_OUTPUT
+                echo "head_branch=$HEAD_BRANCH" >> $GITHUB_OUTPUT
+                echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+                echo "⚠ Latest commit merged from '$HEAD_BRANCH' branch (not develop)"
+              fi
+            else
+              echo "latest_from_develop=unknown" >> $GITHUB_OUTPUT
+              echo "Could not determine PR number from merge commit"
+            fi
+          else
+            echo "latest_from_develop=not_merge" >> $GITHUB_OUTPUT
+            echo "Latest commit is not a merge commit"
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+      - name: "Create warning for non-develop merge"
+        if: steps.check_merge_source.outputs.latest_from_develop == 'false' && inputs.auto_merge == true
+        run: |
+          echo "::warning::Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Auto-merge will be skipped to allow manual review."
+      - name: "Comment on PR about skipped auto-merge"
+        if: steps.check_pr.outputs.result == 'true' && steps.check_merge_source.outputs.latest_from_develop == 'false' && inputs.auto_merge == true
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:develop`,
+              base: 'main',
+              state: 'open'
+            });
+            if (pullRequests.length > 0) {
+              const prNumber = pullRequests[0].number;
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: `⚠️ **Auto-merge skipped**\n\nThe latest commit on \`main\` was merged from branch \`${{ steps.check_merge_source.outputs.head_branch }}\` (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from \`develop\`.\n\nThis suggests a hotfix or other direct merge to \`main\` occurred. Please review the changes manually before merging this PR to ensure \`develop\` is properly synchronized.`
+              });
+            }
+      - name: "Auto-merge Pull Request"
+        if: (steps.create_pr.outputs.URL != '' || (steps.check_pr.outputs.result == 'true' && steps.check_merge_source.outputs.latest_from_develop == 'true')) && inputs.auto_merge == true
+        run: |
+          if [ -n "${{ steps.create_pr.outputs.URL }}" ]; then
+            PR_URL="${{ steps.create_pr.outputs.URL }}"
+          else
+            # Get existing PR URL
+            PR_URL=$(gh pr list --head develop --base main --state open --json url --jq '.[0].url')
+          fi
+          if [ -n "$PR_URL" ]; then
+            gh pr merge "$PR_URL" -t "chore(ci): Auto update develop to match main [skip ci]" -b "This was done automatically by the CI pipeline" --merge
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
