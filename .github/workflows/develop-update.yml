@@ -35,7 +35,6 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
         with:
-          repository: ${{ inputs.repository }}
           ref: main
       - name: "Check if there is a diff between main and develop"
         id: check_diff
@@ -162,28 +161,13 @@ jobs:
         run: |
           echo "::warning::Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Auto-merge will be skipped to allow manual review."
       - name: "Comment on PR about skipped auto-merge"
-        if: steps.check_pr.outputs.result == 'true' && steps.check_merge_source.outputs.latest_from_develop == 'false' && inputs.auto_merge == true
+        if: steps.create_pr.outputs.URL != '' && steps.check_pr.outputs.result == 'false' && steps.check_merge_source.outputs.latest_from_develop == 'false' && inputs.auto_merge == true
         uses: actions/github-script@v6
         with:
           script: |
-            const { data: pullRequests } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head: ``,
-              base: '${context.repo.owner}:developmain',
-              state: 'open'
-            });
-            if (pullRequests.length > 0) {
-              const prNumber = pullRequests[0].number;
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body: `⚠️ **Auto-merge skipped**\n\nThe latest commit on \`main\` was merged from branch \`${{ steps.check_merge_source.outputs.head_branch }}\` (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from \`develop\`.\n\nThis suggests a hotfix or other direct merge to \`main\` occurred. Please review the changes manually before merging this PR to ensure \`develop\` is properly synchronized.`
-              });
-            }
+            gh PR comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
       - name: "Auto-merge Pull Request"
-        if: (steps.create_pr.outputs.URL != '' || (steps.check_pr.outputs.result == 'true' && steps.check_merge_source.outputs.latest_from_develop == 'true')) && inputs.auto_merge == true
+        if: (steps.create_pr.outputs.URL != '' || (steps.check_pr.outputs.result == 'false' && steps.check_merge_source.outputs.latest_from_develop == 'true')) && inputs.auto_merge == true
         run: |
           if [ -n "${{ steps.create_pr.outputs.URL }}" ]; then
             PR_URL="${{ steps.create_pr.outputs.URL }}"
