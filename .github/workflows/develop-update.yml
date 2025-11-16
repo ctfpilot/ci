@@ -59,8 +59,8 @@ jobs:
             const { data: pullRequests } = await github.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `main`,
-              base: '${context.repo.owner}:develop',
+              head: 'main',
+              base: 'develop',
               state: 'open'
             });
             if (pullRequests.length > 0) {
@@ -124,7 +124,7 @@ jobs:
       - name: "Create Pull Request to update develop branch, and merge it"
         id: create_pr
         if: steps.check_diff.outputs.diff == 'true' && steps.check_pr.outputs.result == 'false'
-        run: >-
+        run: |
           URL=$(gh pr create -B develop -H main --title 'CI: Update develop to match main' --body 'Merge main into develop to update the develop branch to the latest version\n\n${{ inputs.pr_description || '' }}' --label develop-update --label ci)
           echo "URL=$URL" >> $GITHUB_OUTPUT
         env:
@@ -171,7 +171,9 @@ jobs:
       - name: "Comment on PR about skipped auto-merge"
         if: steps.check_merge_source.outputs.latest_from_develop == 'false'
         run: |
-          gh PR comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
+          gh pr comment ${{ steps.create_pr.outputs.URL }} "⚠️ Auto-merge skipped: Latest merge commit on main was from branch '${{ steps.check_merge_source.outputs.head_branch }}' (PR #${{ steps.check_merge_source.outputs.pr_number }}), not from develop. Please review and merge manually."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: "Auto-merge Pull Request"
         if: steps.check_merge_source.outputs.latest_from_develop == 'true'
         run: |
