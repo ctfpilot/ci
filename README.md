@@ -93,6 +93,7 @@ When the workflow runs on a push to `develop`, it will fail if `main` is ahead o
 
 - `RELEASE_GH_TOKEN`: GitHub Token. Used to authenticate with GitHub at release step. This will overwrite the use of the default GitHub token.
 - `BUILD_GH_TOKEN`: GitHub Token. Used to authenticate with GitHub at build step. This will overwrite the use of the default GitHub token.
+- `PYPI_TOKEN`: PyPI Token. Used to authenticate with PyPI at release step if present.
 
 #### Outputs
 

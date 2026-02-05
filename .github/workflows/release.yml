@@ -26,6 +26,10 @@ on:
         required: false
       BUILD_GH_TOKEN:
         description: "GitHub Token. Used to authenticate with GitHub at build step. This will overwrite the use of the default GitHub token."
+        required: false
+      PYPI_TOKEN:
+        description: "PyPI Token. Used to authenticate with PyPI at release step if present."
+        required: false
     outputs:
       version:
         description: "The version of the release. Will be empty if no release was made."
