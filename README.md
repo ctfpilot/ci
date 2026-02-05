@@ -86,6 +86,7 @@ When the workflow runs on a push to `develop`, it will fail if `main` is ahead o
 #### Inputs
 
 - `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
+- `plugins`: Additional plugins to install. Example `@semantic-release/changelog @semantic-release/git`
 - `ENVIRONMENT`: The environment to deploy to.
 
 #### Secrets
