@@ -86,6 +86,7 @@ When the workflow runs on a push to `develop`, it will fail if `main` is ahead o
 #### Inputs
 
 - `repository`: Allowed repository for workflow to run in. Example `ctfpilot/hello-world`.
+- `plugins`: List of plugins to install before running the release. List of npm plugins for semantic-release, e.g., `@semantic-release/changelog`, `@semantic-release/git`, listed as to be used directly in install command, e.g., `@semantic-release/changelog @semantic-release/git`.
 - `ENVIRONMENT`: The environment to deploy to.
 
 #### Secrets
