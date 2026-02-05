@@ -11,15 +11,15 @@ on:
         description: "Allowed repository for workflow to run in. Example `ctfpilot/hello-world`."
         required: true
         type: string
-      ENVIRONMENT:
-        description: "The environment to deploy to."
-        required: false
-        type: string
-      PLUGINS:
+      plugins:
         description: "Additional plugins to install. Example `@semantic-release/npm`."
         required: false
         type: string
         default: ""
+      ENVIRONMENT:
+        description: "The environment to deploy to."
+        required: false
+        type: string
     secrets:
       RELEASE_GH_TOKEN:
         description: "GitHub Token. Used to authenticate with GitHub at release step. This will overwrite the use of the default GitHub token."
@@ -76,7 +76,7 @@ jobs:
         with:
           node-version: "lts/*"
       - name: Install dependencies
-        run: npm install semantic-release @semantic-release/exec @semantic-release/commit-analyzer @semantic-release/git @semantic-release/github @semantic-release/release-notes-generator conventional-changelog-conventionalcommits ${{ inputs.PLUGINS }} -D
+        run: npm install semantic-release @semantic-release/exec @semantic-release/commit-analyzer @semantic-release/git @semantic-release/github @semantic-release/release-notes-generator conventional-changelog-conventionalcommits ${{ inputs.plugins }} -D
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: npm audit signatures
       - name: Detect if configuration file is available for semantic-release
@@ -90,51 +90,51 @@ jobs:
       - name: Set default configuration file for semantic-release
         if: steps.check-config.outputs.config_exists == 'false'
         run: |
-            cat << 'EOF' > .releaserc.json
-            {
-                "branches": [
-                    "main",
-                    {
-                        "name": "develop",
-                        "prerelease": "r"
-                    }
-                ],
-                "plugins": [
-                    [
-                        "@semantic-release/commit-analyzer",
-                        {
-                            "preset": "conventionalcommits"
-                        }
-                    ],
-                    [
-                        "@semantic-release/release-notes-generator",
-                        {
-                            "preset": "conventionalcommits"
-                        }
-                    ],
-                    [
-                        "@semantic-release/github",
-                        {
-                            "successComment": false
-                        }
-                    ],
-                    [
-                        "@semantic-release/exec",
-                        {
-                            "prepareCmd": "echo ${nextRelease.version} > version.txt",
-                            "publishCmd": "echo 'Published version ${nextRelease.version}'"
-                        }
-                    ],
-                    [
-                        "@semantic-release/git",
-                        {
-                            "assets": [],
-                            "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-                        }
-                    ]
-                ]
-            }
-            EOF
+          cat << 'EOF' > .releaserc.json
+          {
+              "branches": [
+                  "main",
+                  {
+                      "name": "develop",
+                      "prerelease": "r"
+                  }
+              ],
+              "plugins": [
+                  [
+                      "@semantic-release/commit-analyzer",
+                      {
+                          "preset": "conventionalcommits"
+                      }
+                  ],
+                  [
+                      "@semantic-release/release-notes-generator",
+                      {
+                          "preset": "conventionalcommits"
+                      }
+                  ],
+                  [
+                      "@semantic-release/github",
+                      {
+                          "successComment": false
+                      }
+                  ],
+                  [
+                      "@semantic-release/exec",
+                      {
+                          "prepareCmd": "echo ${nextRelease.version} > version.txt",
+                          "publishCmd": "echo 'Published version ${nextRelease.version}'"
+                      }
+                  ],
+                  [
+                      "@semantic-release/git",
+                      {
+                          "assets": [],
+                          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+                      }
+                  ]
+              ]
+          }
+          EOF
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_GH_TOKEN || secrets.GITHUB_TOKEN }}
