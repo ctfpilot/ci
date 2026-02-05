@@ -15,6 +15,11 @@ on:
         description: "The environment to deploy to."
         required: false
         type: string
+      PLUGINS:
+        description: "Additional plugins to install. Example `@semantic-release/npm`."
+        required: false
+        type: string
+        default: ""
     secrets:
       RELEASE_GH_TOKEN:
         description: "GitHub Token. Used to authenticate with GitHub at release step. This will overwrite the use of the default GitHub token."
@@ -71,7 +76,7 @@ jobs:
         with:
           node-version: "lts/*"
       - name: Install dependencies
-        run: npm install semantic-release @semantic-release/exec @semantic-release/commit-analyzer @semantic-release/git @semantic-release/github @semantic-release/release-notes-generator conventional-changelog-conventionalcommits -D
+        run: npm install semantic-release @semantic-release/exec @semantic-release/commit-analyzer @semantic-release/git @semantic-release/github @semantic-release/release-notes-generator conventional-changelog-conventionalcommits ${{ inputs.PLUGINS }} -D
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: npm audit signatures
       - name: Detect if configuration file is available for semantic-release
