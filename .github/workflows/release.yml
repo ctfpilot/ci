@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       plugins:
-        description: "Additional plugins to install. Example `@semantic-release/npm`."
+        description: "Additional plugins to install. Example `@semantic-release/changelog @semantic-release/git`."
         required: false
         type: string
         default: ""
