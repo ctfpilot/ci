@@ -21,7 +21,7 @@ on:
         required: false
         type: string
       INSTALL_UV:
-        description: "Whether to install uv in pipeline. Allows to run uv commands in release workflow. Defaults to false."
+        description: "Whether to install uv in this workflow so later release workflow can run uv commands. Defaults to false."
         required: false
         type: boolean
         default: false
