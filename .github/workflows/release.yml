@@ -20,6 +20,11 @@ on:
         description: "The environment to deploy to."
         required: false
         type: string
+      INSTALL_UV:
+        description: "Whether to install uv in pipeline. Allows to run uv commands in release workflow. Defaults to false."
+        required: false
+        type: boolean
+        default: false
     secrets:
       RELEASE_GH_TOKEN:
         description: "GitHub Token. Used to authenticate with GitHub at release step. This will overwrite the use of the default GitHub token."
@@ -74,6 +79,12 @@ jobs:
           echo "Develop branch is not up to date with main. Please update develop before releasing."
           echo "::error title=Develop branch out of date::Develop branch is not up to date with main. Please update develop before releasing."
           exit 1
+
+      - name: Install uv
+        if: inputs.INSTALL_UV == 'true'
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          enable-cache: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
