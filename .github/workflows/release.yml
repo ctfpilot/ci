@@ -91,7 +91,7 @@ jobs:
         with:
           node-version: "lts/*"
       - name: Install dependencies
-        run: npm install semantic-release @semantic-release/exec @semantic-release/commit-analyzer @semantic-release/git @semantic-release/github @semantic-release/release-notes-generator conventional-changelog-conventionalcommits ${{ inputs.plugins }} -D
+        run: npm install semantic-release@v25.0.0 @semantic-release/exec@v7.1.0 @semantic-release/commit-analyzer@v13.0.1 @semantic-release/git@v10.0.1 @semantic-release/github@v12.0.9 @semantic-release/release-notes-generator@v14.1.1 conventional-changelog-conventionalcommits@v9.3.1 ${{ inputs.plugins }} -D
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
         run: npm audit signatures
       - name: Detect if configuration file is available for semantic-release
